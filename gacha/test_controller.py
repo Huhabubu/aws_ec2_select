@@ -246,6 +246,15 @@ class PlanTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             ec2_gacha.render_user_data(TEMPLATE, "https://x/y.git", "main;rm -rf /", 60)
 
+    def test_real_template_renders(self):
+        template = ec2_gacha.DEFAULT_USER_DATA.read_text(encoding="utf-8")
+        rendered = ec2_gacha.render_user_data(template, ec2_gacha.DEFAULT_REPO_URL,
+                                              "feat/ec2-latency-gacha", 45)
+        self.assertNotIn("__", rendered.split("\n", 3)[3])
+        self.assertIn('TTL_MINUTES="45"', rendered)
+        self.assertIn('shutdown -h "+${TTL_MINUTES}"', rendered)
+        self.assertIn(ec2_gacha.PROBE_BIN.rsplit("/", 2)[0], rendered)
+
     def test_dry_run_needs_no_aws(self):
         self.assertEqual(ec2_gacha.main(["run", "--az", "ap-northeast-1a"]), 0)
 
