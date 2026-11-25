@@ -18,3 +18,8 @@ add_executable(test_stats tests/test_stats.cpp)
 target_include_directories(test_stats PRIVATE src)
 target_compile_options(test_stats PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME test_stats COMMAND test_stats)
+
+add_executable(test_ws_frame tests/test_ws_frame.cpp)
+target_include_directories(test_ws_frame PRIVATE src)
+target_compile_options(test_ws_frame PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME test_ws_frame COMMAND test_ws_frame)
