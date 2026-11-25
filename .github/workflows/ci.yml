@@ -29,3 +29,15 @@ jobs:
           set -e
           test "$code" -eq 64
           ./build/latency_probe --help || test "$?" -eq 64
+
+  gacha:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Unit tests
+        run: python -m unittest discover -s gacha -v
+      - name: Dry-run smoke test
+        run: python gacha/ec2_gacha.py run --az ap-northeast-1a --az ap-northeast-1c
