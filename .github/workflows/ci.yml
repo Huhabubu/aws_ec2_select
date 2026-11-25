@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends cmake g++ libssl-dev
+      - name: Configure
+        run: cmake -S probe -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-Werror
+      - name: Build
+        run: cmake --build build -j
+      - name: Unit tests
+        run: ctest --test-dir build --output-on-failure
+      - name: CLI smoke test
+        run: |
+          set +e
+          ./build/latency_probe --market nope
+          code=$?
+          set -e
+          test "$code" -eq 64
+          ./build/latency_probe --help || test "$?" -eq 64
+
+  gacha:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Unit tests
+        run: python -m unittest discover -s gacha -v
+      - name: Dry-run smoke test
+        run: python gacha/ec2_gacha.py run --az ap-northeast-1a --az ap-northeast-1c
+
+  userdata:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax check
+        run: bash -n userdata/bootstrap.sh
+      - name: Shellcheck
+        run: shellcheck userdata/bootstrap.sh
